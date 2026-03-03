@@ -12,6 +12,10 @@ const messageRoutes = require('./routes/message.routes');
 
 const app = express();
 
+// Trust proxy - Required for Render and other reverse proxies
+// This allows express-rate-limit to correctly identify client IPs
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(cors({ origin: config.app.corsOrigin }));

@@ -18,6 +18,10 @@ class DiscordService {
       console.log('🔧 Starting Discord bot initialization...');
       console.log('📍 Environment:', process.env.NODE_ENV || 'development');
       console.log('🔑 Token present:', config.discord.token ? 'YES' : 'NO');
+      if (config.discord.token) {
+        const maskedToken = config.discord.token.substring(0, 20) + '...' + config.discord.token.slice(-4);
+        console.log('🔑 Token (masked):', maskedToken);
+      }
       console.log('🏰 Guild ID present:', config.discord.guildId ? 'YES' : 'NO');
       
       if (!config.discord.token) {
