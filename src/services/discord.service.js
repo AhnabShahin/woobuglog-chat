@@ -7,30 +7,51 @@ class DiscordService {
     this.isReady = false;
   }
 
+  _ensureReady() {
+    if (!this.client || !this.isReady) {
+      throw new Error('Discord bot is not ready. Please try again in a moment.');
+    }
+  }
+
   async initialize() {
-    this.client = new Client({
-      intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers,
-      ],
-    });
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.error('⚠️  Discord initialization timeout after 30 seconds');
+        // Don't reject - allow server to start anyway
+        resolve();
+      }, 30000);
 
-    this.client.once('ready', () => {
-      console.log(`✅ Discord bot logged in as ${this.client.user.tag}`);
-      this.isReady = true;
-    });
+      this.client = new Client({
+        intents: [
+          GatewayIntentBits.Guilds,
+          GatewayIntentBits.GuildMessages,
+          GatewayIntentBits.MessageContent,
+          GatewayIntentBits.GuildMembers,
+        ],
+      });
 
-    this.client.on('error', (error) => {
-      console.error('❌ Discord client error:', error);
-    });
+      this.client.once('ready', () => {
+        clearTimeout(timeout);
+        console.log(`✅ Discord bot logged in as ${this.client.user.tag}`);
+        this.isReady = true;
+        resolve();
+      });
 
-    await this.client.login(config.discord.token);
+      this.client.on('error', (error) => {
+        console.error('❌ Discord client error:', error);
+      });
+
+      this.client.login(config.discord.token).catch((error) => {
+        clearTimeout(timeout);
+        console.error('❌ Failed to login to Discord:', error);
+        reject(error);
+      });
+    });
   }
 
   // Thread Operations
   async createThread(channelId, options) {
+    this._ensureReady();
     const channel = await this.client.channels.fetch(channelId);
     if (!channel) throw new Error('Channel not found');
 
@@ -48,6 +69,7 @@ class DiscordService {
   }
 
   async getThread(threadId) {
+    this._ensureReady();
     const thread = await this.client.channels.fetch(threadId);
     if (!thread || !thread.isThread()) {
       throw new Error('Thread not found');
@@ -87,6 +109,7 @@ class DiscordService {
 
   // Message Operations
   async sendMessage(channelId, content, options = {}) {
+    this._ensureReady();
     const channel = await this.client.channels.fetch(channelId);
     if (!channel) throw new Error('Channel or thread not found');
 
@@ -105,6 +128,7 @@ class DiscordService {
   }
 
   async getMessage(channelId, messageId) {
+    this._ensureReady();
     const channel = await this.client.channels.fetch(channelId);
     if (!channel) throw new Error('Channel not found');
 
@@ -115,6 +139,7 @@ class DiscordService {
   }
 
   async getMessages(channelId, options = {}) {
+    this._ensureReady();
     const channel = await this.client.channels.fetch(channelId);
     if (!channel) throw new Error('Channel not found');
 
