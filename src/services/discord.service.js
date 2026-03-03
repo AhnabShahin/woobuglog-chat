@@ -31,12 +31,14 @@ class DiscordService {
       }
 
       const timeout = setTimeout(() => {
-        console.error('⚠️  Discord initialization timeout after 30 seconds');
+        console.error('⚠️  Discord initialization timeout after 60 seconds');
         console.error('⚠️  Bot failed to connect. Check token and network connectivity.');
+        console.error('⚠️  This may be a temporary Discord API issue. The server will continue running.');
+        console.error('💡 The bot will attempt to reconnect automatically when Discord is available.');
         this.isReady = false;
         // Don't reject - allow server to start anyway
         resolve();
-      }, 30000);
+      }, 60000);
 
       this.client = new Client({
         intents: [
@@ -45,6 +47,13 @@ class DiscordService {
           GatewayIntentBits.MessageContent,
           GatewayIntentBits.GuildMembers,
         ],
+        ws: {
+          // Increase timeout for slow connections
+          connectionTimeout: 60000,
+        },
+        // Retry options for better reliability on cloud platforms
+        retryLimit: 3,
+        restRequestTimeout: 30000,
       });
 
       this.client.once('ready', () => {
@@ -56,7 +65,8 @@ class DiscordService {
       });
 
       this.client.on('error', (error) => {
-        console.error('❌ Discord client error:', error);
+        console.error('❌ Discord client error:', error.message);
+        console.error('❌ Error code:', error.code);
       });
 
       this.client.on('disconnect', () => {
@@ -68,16 +78,33 @@ class DiscordService {
         console.log('🔄 Discord bot reconnecting...');
       });
 
+      this.client.on('shardError', error => {
+        console.error('❌ WebSocket connection error:', error.message);
+      });
+
+      this.client.on('shardReconnecting', () => {
+        console.log('🔄 WebSocket reconnecting...');
+      });
+
+      this.client.on('shardReady', () => {
+        console.log('✅ WebSocket connection established');
+      });
+
       console.log('🔐 Attempting to login to Discord...');
+      console.log('⏳ This may take 10-60 seconds on first connection...');
+      
       this.client.login(config.discord.token).catch((error) => {
         clearTimeout(timeout);
         console.error('❌ Failed to login to Discord:', error.message);
+        console.error('❌ Error code:', error.code);
         console.error('💡 Possible reasons:');
         console.error('   - Invalid or expired bot token');
-        console.error('   - Network connectivity issues');
-        console.error('   - Discord API is down');
+        console.error('   - Network connectivity issues from hosting provider');
+        console.error('   - Discord API is down or rate limiting');
+        console.error('   - Firewall blocking WebSocket connections');
         this.isReady = false;
-        reject(error);
+        // Don't reject - allow server to continue
+        resolve();
       });
     });
   }
