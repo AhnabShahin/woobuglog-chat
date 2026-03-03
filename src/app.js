@@ -9,6 +9,7 @@ const discordService = require('./services/discord.service');
 // Import routes
 const threadRoutes = require('./routes/thread.routes');
 const messageRoutes = require('./routes/message.routes');
+const discordRoutes = require('./routes/discord.routes');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.get('/api/v1/health', (req, res) => {
 });
 
 // API routes
+app.use('/api/v1/discord', discordRoutes);
 app.use('/api/v1/threads', threadRoutes);
 app.use('/api/v1/messages', messageRoutes);
 

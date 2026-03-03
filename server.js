@@ -17,6 +17,8 @@ const startServer = async () => {
       console.log('═══════════════════════════════════════════════════\n');
       console.log('📖 Available endpoints:');
       console.log('   GET  /api/v1/health');
+      console.log('   GET  /api/v1/discord/status');
+      console.log('   POST /api/v1/discord/reconnect');
       console.log('   POST /api/v1/threads/create');
       console.log('   POST /api/v1/messages/send');
       console.log('   GET  /api/v1/messages/:channelId');
@@ -26,7 +28,7 @@ const startServer = async () => {
 
     // Initialize Discord bot AFTER server is listening
     console.log('🤖 Initializing Discord bot...');
-    console.log('⏳ Please wait for Discord connection (may take up to 30 seconds)...\n');
+    console.log('⏳ Connection may take up to 60 seconds, with automatic retries...\n');
     
     discordService.initialize()
       .then(() => {

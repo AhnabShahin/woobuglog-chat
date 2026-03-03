@@ -5,6 +5,9 @@ class DiscordService {
   constructor() {
     this.client = null;
     this.isReady = false;
+    this.retryCount = 0;
+    this.maxRetries = 5;
+    this.retryDelay = 10000; // 10 seconds between retries
   }
 
   _ensureReady() {
@@ -16,6 +19,7 @@ class DiscordService {
   async initialize() {
     return new Promise((resolve, reject) => {
       console.log('🔧 Starting Discord bot initialization...');
+      console.log(`📍 Attempt ${this.retryCount + 1}/${this.maxRetries + 1}`);
       console.log('📍 Environment:', process.env.NODE_ENV || 'development');
       console.log('🔑 Token present:', config.discord.token ? 'YES' : 'NO');
       if (config.discord.token) {
@@ -32,12 +36,26 @@ class DiscordService {
 
       const timeout = setTimeout(() => {
         console.error('⚠️  Discord initialization timeout after 60 seconds');
-        console.error('⚠️  Bot failed to connect. Check token and network connectivity.');
-        console.error('⚠️  This may be a temporary Discord API issue. The server will continue running.');
-        console.error('💡 The bot will attempt to reconnect automatically when Discord is available.');
-        this.isReady = false;
-        // Don't reject - allow server to start anyway
-        resolve();
+        
+        // Auto-retry logic
+        if (this.retryCount < this.maxRetries) {
+          this.retryCount++;
+          console.log(`🔄 Retrying connection in ${this.retryDelay / 1000} seconds...`);
+          console.log(`   (Retry ${this.retryCount}/${this.maxRetries})`);
+          
+          setTimeout(() => {
+            console.log('🔄 Attempting reconnection...');
+            this.reconnect().then(resolve).catch(() => {
+              console.error('⚠️  All retry attempts failed. Manual reconnection may be needed.');
+              resolve();
+            });
+          }, this.retryDelay);
+        } else {
+          console.error('❌ All connection attempts failed.');
+          console.error('💡 You can manually trigger reconnection via: POST /api/v1/discord/reconnect');
+          this.isReady = false;
+          resolve();
+        }
       }, 60000);
 
       this.client = new Client({
@@ -107,6 +125,29 @@ class DiscordService {
         resolve();
       });
     });
+  }
+
+  async reconnect() {
+    console.log('🔄 Manual reconnect triggered');
+    
+    // Destroy existing client if any
+    if (this.client) {
+      try {
+        this.client.destroy();
+        console.log('🧹 Cleaned up previous client');
+      } catch (err) {
+        console.log('⚠️  Error destroying client:', err.message);
+      }
+    }
+    
+    this.client = null;
+    this.isReady = false;
+    
+    // Wait a moment before reconnecting
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Try to initialize again
+    return this.initialize();
   }
 
   // Thread Operations
