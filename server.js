@@ -2,16 +2,13 @@ const app = require('./src/app');
 const config = require('./src/config/config');
 const discordService = require('./src/services/discord.service');
 
+let server;
+
 const startServer = async () => {
   try {
-    // Initialize Discord bot
-    console.log('🤖 Initializing Discord bot...');
-    await discordService.initialize();
-    console.log('✅ Discord bot connected successfully\n');
-
-    // Start Express server
+    // Start Express server FIRST so Render can detect the open port
     const PORT = config.api.port;
-    app.listen(PORT, '0.0.0.0', () => {
+    server = app.listen(PORT, '0.0.0.0', () => {
       console.log('═══════════════════════════════════════════════════');
       console.log('🚀 Server running on port ' + PORT);
       console.log('📍 API Base URL: http://localhost:' + PORT + '/api/v1');
@@ -26,6 +23,18 @@ const startServer = async () => {
       console.log('\n💡 Tip: Check FEATURE_DOCUMENTATION.md for full API details');
       console.log('═══════════════════════════════════════════════════\n');
     });
+
+    // Initialize Discord bot AFTER server is listening
+    console.log('🤖 Initializing Discord bot...');
+    discordService.initialize()
+      .then(() => {
+        console.log('✅ Discord bot connected successfully\n');
+      })
+      .catch((error) => {
+        console.error('⚠️  Warning: Discord bot failed to connect:', error.message);
+        console.log('⚠️  Server is running but Discord features may not work\n');
+      });
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
@@ -33,17 +42,22 @@ const startServer = async () => {
 };
 
 // Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('\n⚠️  SIGTERM received, shutting down gracefully...');
-  discordService.client?.destroy();
-  process.exit(0);
-});
+const shutdown = () => {
+  console.log('\n⚠️  Shutting down gracefully...');
+  if (server) {
+    server.close(() => {
+      console.log('✅ HTTP server closed');
+      discordService.client?.destroy();
+      process.exit(0);
+    });
+  } else {
+    discordService.client?.destroy();
+    process.exit(0);
+  }
+};
 
-process.on('SIGINT', () => {
-  console.log('\n⚠️  SIGINT received, shutting down gracefully...');
-  discordService.client?.destroy();
-  process.exit(0);
-});
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 // Start the server
 startServer();
