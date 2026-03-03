@@ -11,7 +11,7 @@ const startServer = async () => {
 
     // Start Express server
     const PORT = config.api.port;
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log('═══════════════════════════════════════════════════');
       console.log('🚀 Server running on port ' + PORT);
       console.log('📍 API Base URL: http://localhost:' + PORT + '/api/v1');
