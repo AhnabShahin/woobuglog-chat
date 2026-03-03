@@ -26,13 +26,28 @@ const startServer = async () => {
 
     // Initialize Discord bot AFTER server is listening
     console.log('🤖 Initializing Discord bot...');
+    console.log('⏳ Please wait for Discord connection (may take up to 30 seconds)...\n');
+    
     discordService.initialize()
       .then(() => {
-        console.log('✅ Discord bot connected successfully\n');
+        const status = discordService.getStatus();
+        if (status.connected) {
+          console.log('✅ Discord bot connected successfully');
+          console.log(`👤 Bot user: ${status.user}`);
+          console.log('🎯 API is ready to handle Discord requests\n');
+        } else {
+          console.error('⚠️  Discord bot initialization completed but bot is not connected');
+          console.error('⚠️  Please check your DISCORD_BOT_TOKEN in Render dashboard');
+          console.error('⚠️  Server is running but Discord API endpoints will return 503\n');
+        }
       })
       .catch((error) => {
-        console.error('⚠️  Warning: Discord bot failed to connect:', error.message);
-        console.log('⚠️  Server is running but Discord features may not work\n');
+        console.error('❌ Discord bot failed to connect:', error.message);
+        console.error('⚠️  Server is running but Discord features will not work');
+        console.error('📋 Action required: Verify environment variables in Render dashboard:');
+        console.error('   - DISCORD_BOT_TOKEN (required)');
+        console.error('   - DISCORD_GUILD_ID (optional)');
+        console.error('   - DISCORD_DEFAULT_CHANNEL_ID (optional)\n');
       });
 
   } catch (error) {

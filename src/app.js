@@ -44,10 +44,16 @@ app.get('/api/v1/health', (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       api: 'up',
-      discord: discordStatus.connected ? 'connected' : 'disconnected',
+      discord: {
+        status: discordStatus.connected ? 'connected' : 'disconnected',
+        user: discordStatus.user,
+        uptime: discordStatus.uptime,
+        ready: discordStatus.connected,
+      },
       authentication: config.auth.enabled ? 'enabled' : 'disabled',
     },
     uptime: process.uptime(),
+    environment: config.api.nodeEnv,
   });
 });
 

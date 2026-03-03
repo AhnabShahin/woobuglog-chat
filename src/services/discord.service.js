@@ -15,8 +15,21 @@ class DiscordService {
 
   async initialize() {
     return new Promise((resolve, reject) => {
+      console.log('🔧 Starting Discord bot initialization...');
+      console.log('📍 Environment:', process.env.NODE_ENV || 'development');
+      console.log('🔑 Token present:', config.discord.token ? 'YES' : 'NO');
+      console.log('🏰 Guild ID present:', config.discord.guildId ? 'YES' : 'NO');
+      
+      if (!config.discord.token) {
+        const error = new Error('DISCORD_BOT_TOKEN is not configured');
+        console.error('❌ Cannot initialize Discord bot: Missing token');
+        return reject(error);
+      }
+
       const timeout = setTimeout(() => {
         console.error('⚠️  Discord initialization timeout after 30 seconds');
+        console.error('⚠️  Bot failed to connect. Check token and network connectivity.');
+        this.isReady = false;
         // Don't reject - allow server to start anyway
         resolve();
       }, 30000);
@@ -33,6 +46,7 @@ class DiscordService {
       this.client.once('ready', () => {
         clearTimeout(timeout);
         console.log(`✅ Discord bot logged in as ${this.client.user.tag}`);
+        console.log(`🏰 Connected to ${this.client.guilds.cache.size} guild(s)`);
         this.isReady = true;
         resolve();
       });
@@ -41,9 +55,24 @@ class DiscordService {
         console.error('❌ Discord client error:', error);
       });
 
+      this.client.on('disconnect', () => {
+        console.warn('⚠️  Discord bot disconnected');
+        this.isReady = false;
+      });
+
+      this.client.on('reconnecting', () => {
+        console.log('🔄 Discord bot reconnecting...');
+      });
+
+      console.log('🔐 Attempting to login to Discord...');
       this.client.login(config.discord.token).catch((error) => {
         clearTimeout(timeout);
-        console.error('❌ Failed to login to Discord:', error);
+        console.error('❌ Failed to login to Discord:', error.message);
+        console.error('💡 Possible reasons:');
+        console.error('   - Invalid or expired bot token');
+        console.error('   - Network connectivity issues');
+        console.error('   - Discord API is down');
+        this.isReady = false;
         reject(error);
       });
     });
