@@ -22,9 +22,12 @@ Click **"Add Environment Variable"** and add these **ONE BY ONE**:
 **Variable 1: DISCORD_BOT_TOKEN** (MOST IMPORTANT)
 ```
 Key: DISCORD_BOT_TOKEN
-Value: MTQ3NTczMTU1MzQyNTI5MzM0Mg.GR07sc.IE88492T6vxhCg7-ViMlPfRZkCCnD_XYq1td7U
+Value: <YOUR_DISCORD_BOT_TOKEN_FROM_.ENV_FILE>
 ```
-⚠️ **Important**: Paste the token WITHOUT quotes, WITHOUT spaces
+⚠️ **Important**: 
+- Copy the token from your `.env` file (starts with MTQ7...)
+- Paste the token WITHOUT quotes, WITHOUT spaces
+- It should be approximately 72 characters long
 
 **Variable 2: DISCORD_GUILD_ID**
 ```
@@ -41,8 +44,9 @@ Value: 1475734635781554251
 **Variable 4: API_TOKEN** (for authentication)
 ```
 Key: API_TOKEN
-Value: 779640d4be14f99c6bebbfe9e68cf9a544c323872f0dd4b48d71139dd09a5431
+Value: <YOUR_API_TOKEN_FROM_.ENV_FILE>
 ```
+⚠️ Copy this from your `.env` file
 
 #### Optional Variables (if not already set):
 
@@ -120,18 +124,18 @@ After redeployment completes:
    ```
 
 ---
+Where to Find These Values
 
-## 📝 Current Configuration (from your .env)
+Copy these from your local `.env` file:
 
-These are the values you should copy to Render:
-
-| Variable | Value |
-|----------|-------|
-| DISCORD_BOT_TOKEN | `MTQ7573...td7U` (72 characters) |
-| DISCORD_GUILD_ID | `1475734634649358430` |
-| DISCORD_DEFAULT_CHANNEL_ID | `1475734635781554251` |
-| API_TOKEN | `779640d4be14f99c6bebbfe9e68cf9a544c323872f0dd4b48d71139dd09a5431` |
-| API_AUTH_ENABLED | `true` |
+| Variable | Location in .env |
+|----------|------------------|
+| DISCORD_BOT_TOKEN | Line 3 in `.env` (starts with MTQ..., ~72 chars) |
+| DISCORD_GUILD_ID | Line 7 in `.env` |
+| DISCORD_DEFAULT_CHANNEL_ID | Line 11 in `.env` |
+| API_TOKEN | Line 22 in `.env` (64 character hex string) |
+| API_AUTH_ENABLED | Set to `true` for production |
+| NODE_ENV | Set to `production` for Rendere` |
 | NODE_ENV | `production` |
 
 ---
